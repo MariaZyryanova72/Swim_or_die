@@ -11,9 +11,6 @@
             PIPE_SPAWN_MAX_INTERVAL = 3000,
             AVAILABLE_SPACE_BETWEEN_PIPES = 130,
 
-            FISCH_SPAWN_MIN_TIME = 3000,
-            FISCH_SPAWN_MAX_TIME = 10000,
-
             MAX_DIFFICULT = 100,
 
             SCENE = 'game',
@@ -28,10 +25,9 @@
 
 
         var Background,
-            Fisches, FischesTimer,
             Pipes, PipesTimer, FreeSpacesInPipes,
             Akula,
-            Dno,
+            Domaschka,
             SwimSound, ScoreSound, DieSound,
             SoundEnabledIcon, SoundDisabledIcon,
             TitleText, ScoreText, HighScoreTitleText, HighScoreText, PostScoreText, LoadingText,
@@ -88,8 +84,7 @@
             isScorePosted = false;
 
             createBackground();
-            createFisches();
-            createDno();
+            createDomaschka();
             createPipes(false);
             createAkula();
             createTexts();
@@ -116,7 +111,7 @@
             Akula.y = (Game.world.height / 2) + 32 * Math.sin(Game.time.now / 200);
             Akula.x = (Game.world.width / 4) + 64 * Math.cos(Game.time.now / 500);
 
-            Dno.tilePosition.x -= Game.time.physicsElapsed * GAME_SPEED / 5;
+            Domaschka.tilePosition.x -= Game.time.physicsElapsed * GAME_SPEED / 5;
         };
 
         var GameState = new Phaser.State();
@@ -156,7 +151,7 @@
 
             Game.physics.overlap(Akula, FreeSpacesInPipes, addScore);
 
-            Dno.tilePosition.x -= Game.time.physicsElapsed * getModifiedSpeed() / 5;
+            Domaschka.tilePosition.x -= Game.time.physicsElapsed * getModifiedSpeed() / 5;
         };
 
         GameState.render = function() {
@@ -297,15 +292,10 @@
 
         var loadAssets = function loadAssets() {
             Game.load.spritesheet('akula', 'img/akula.png', 89, 65);
-            Game.load.spritesheet('fisches', 'img/fisch.png', 64, 34);
 
-            Game.load.image('dno', 'img/dno.png');
-            if (CANVAS_HEIGHT > 1000) {
-                Game.load.image('pipe', 'img/pipe_2.png');
-            }
-            else {
-                Game.load.image('pipe', 'img/pipe_1.png');
-            }
+            Game.load.image('Domaschka', 'img/background.png');
+            Game.load.image('background', 'img/.png');
+            Game.load.image('pipe', 'img/pipe1.png');
             Game.load.image('soundOn', 'img/soundOn.png');
             Game.load.image('soundOff', 'img/soundOff.png');
 
@@ -321,45 +311,10 @@
             Background.endFill();
         };
 
-        var createFisches = function createFisches() {
-            function makeNewFisch(fischX, startTimer) {
-                fischX = typeof fischX == 'undefined' ? Game.world.width : fischX;
-                startTimer = typeof startTimer == 'undefined' ? true : false;
 
-                var fischY = Math.random() * Game.world.height / 2,
-                    fisch = Fisches.create(fischX, fischY, 'fisches', Math.floor(21 * Math.random())),
-                    fischScale = 1 + Math.floor( 2 * (Math.random()));
-
-                fisch.alpha = 1 / fischScale * 2;
-                fisch.scale.setTo(fischScale, fischScale);
-                fisch.body.allowGravity = false;
-                fisch.body.velocity.x = -GAME_SPEED / fischScale * 0.5;
-                fisch.anchor.setTo(0, 0.5);
-
-                fisch.events.onOutOfBounds.add(function(fisch) {
-                    fisch.kill();
-                });
-
-                if (startTimer) {
-                    FischesTimer.add(Game.rnd.integerInRange(FISCH_SPAWN_MIN_TIME, FISCH_SPAWN_MAX_TIME), makeNewFisch, this);
-                }
-            }
-
-            Fisches = Game.add.group();
-
-            var fischX = 0;
-            while (fischX < Game.world.width) {
-                makeNewFisch(fischX, false);
-                fischX += Math.floor(Math.random() * 100);
-            }
-
-            FischesTimer = Game.time.create(false);
-            FischesTimer.add(0, makeNewFisch, this);
-            FischesTimer.start();
-        };
-
-        var createDno = function createDno() {
-            Dno = Game.add.tileSprite(0, Game.world.height - 128, Game.world.width, 128, 'dno');
+        var createDomaschka = function createDomaschka() {
+            Domaschka = Game.add.tileSprite(0, 0,
+                Game.world.width, Game.world.height, 'Domaschka');
         };
 
         var createAkula = function createAkula() {
@@ -374,11 +329,14 @@
 
         var createPipes = function createPipes(timer) {
             function calcDifficult() {
-                return AVAILABLE_SPACE_BETWEEN_PIPES + (Math.floor(Math.random() * AVAILABLE_SPACE_BETWEEN_PIPES)) * ((gameScore > MAX_DIFFICULT ? MAX_DIFFICULT : MAX_DIFFICULT - gameScore) / (MAX_DIFFICULT + 1));
+                return AVAILABLE_SPACE_BETWEEN_PIPES +
+                    (Math.floor(Math.random() * AVAILABLE_SPACE_BETWEEN_PIPES)) *
+                    ((gameScore > MAX_DIFFICULT ? MAX_DIFFICULT : MAX_DIFFICULT - gameScore) / (MAX_DIFFICULT + 1));
             }
 
             function makeNewPipe(pipeY, isFlipped) {
-                var pipe = Pipes.create(Game.world.width, pipeY + (isFlipped ? -calcDifficult() : calcDifficult()) / 2, 'pipe');
+                var pipe = Pipes.create(Game.world.width, pipeY +
+                    (isFlipped ? -calcDifficult() : calcDifficult()) / 2, 'pipe');
 
                 pipe.body.allowGravity = false;
                 pipe.scale.setTo(2.5, isFlipped ? -2 : 2);
